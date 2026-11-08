@@ -9,6 +9,7 @@ const ALLOWED = new Set([
   'media.next',
   'media.previous',
   'media.volume.mute',
+  'media.volume.set',
   'system.lock',
   'system.sleep',
   'system.hibernate',
@@ -27,6 +28,8 @@ export default async function(input, ctx) {
   if (input.action === 'app.launch' && (typeof payload.app_id !== 'string' || !/^[a-z0-9_-]{1,40}$/i.test(payload.app_id))) {
     throw new Error('Invalid application ID');
   }
+
+  if (input.action === 'media.volume.set' && (!Number.isInteger(payload.value) || payload.value < 0 || payload.value > 100)) throw new Error('Volume must be an integer from 0 to 100');
 
   const id = crypto.randomUUID();
   const now = Math.floor(Date.now() / 1000);
