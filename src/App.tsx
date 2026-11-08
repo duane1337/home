@@ -111,12 +111,12 @@ function App() {
         {tab === 'media' && <>
           <PageHeading eyebrow="LISTENING ROOM" title="Media" subtitle="Control playback across Windows." />
           <div className="player-card"><div className="large-album"><Disc3 size={54} strokeWidth={1.1} /></div><p className="eyebrow center">WINDOWS MEDIA SESSION</p><h2 className="empty-track">Nothing playing</h2><p className="muted center">Start playback on your computer to see track details here.</p><div className="progress-track"><span /></div><div className="player-controls"><button onClick={() => void sendCommand('media.previous')}><SkipBack size={22} /></button><button className="play-main" onClick={() => { setPlaying(!playing); void sendCommand('media.playPause') }}>{playing ? <AudioLines size={23} /> : <Play size={22} fill="currentColor" />}</button><button onClick={() => void sendCommand('media.next')}><SkipForward size={22} /></button></div></div>
-          <div className="volume-card"><div className="volume-head"><div><Volume2 size={18} /><strong>System volume</strong></div><span>{volume}%</span></div><input type="range" min="0" max="100" value={volume} onChange={e => setVolume(Number(e.target.value))} /><div className="volume-foot"><VolumeX size={16} /><span>Muted</span><Volume2 size={16} /></div></div>
+          <div className="volume-card"><div className="volume-head"><div><Volume2 size={18} /><strong>System volume</strong></div><span>{volume}%</span></div><input type="range" min="0" max="100" value={volume} onChange={e => setVolume(Number(e.target.value))} onMouseUp={() => void sendCommand("media.volume.set", { value: volume })} onTouchEnd={() => void sendCommand("media.volume.set", { value: volume })} /><div className="volume-foot"><button onClick={() => void sendCommand("media.volume.mute")}><VolumeX size={16} /><span>Toggle mute</span></button><span>Windows master volume</span></div></div>
         </>}
 
         {tab === 'system' && <>
           <PageHeading eyebrow="SYSTEM" title="Power controls" subtitle="Manage your Windows session." />
-          <div className="system-notice"><div className="notice-icon"><Power size={19} /></div><div><strong>Computer is offline</strong><span>Power actions become available when the agent connects.</span></div></div>
+          <div className="system-notice"><div className="notice-icon"><Power size={19} /></div><div><strong>{pcOnline ? "Computer is connected" : "Computer is offline"}</strong><span>{pcOnline ? "Windows agent is ready for commands." : "Start the Windows agent to enable power actions."}</span></div></div>
           <div className="power-list">
             <PowerRow icon={Lock} title="Lock computer" description="Lock your Windows session" onClick={() => void sendCommand('system.lock')} />
             <PowerRow icon={Moon} title="Sleep" description="Put the computer into sleep mode" onClick={() => void sendCommand('system.sleep')} />
