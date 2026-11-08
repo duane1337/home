@@ -4,22 +4,25 @@ Last updated: 2026-11-08
 
 ## Implemented in repository
 
-- React/Vite Mini App UI scaffold with Home, Apps, Media, System, Settings.
-- Typed Telegram Serverless frontend bridge.
-- Telegram Serverless endpoint modules and SQLite command queue.
-- Cloudflare Worker + Durable Object WebSocket relay prototype.
-- Python Windows Agent prototype with allow-listed app launch, media keys, lock, sleep and hibernate.
-- Setup documentation and example configuration files.
+- React/Vite Telegram Mini App with Home, Apps, Media, System and Settings.
+- Telegram Serverless RPC bridge using the documented promise-based endpoint call.
+- Owner-authenticated endpoints and SQLite command queue.
+- Cloudflare Worker + Durable Object WebSocket relay with agent authentication and acknowledgement lookup.
+- Python Windows agent with reconnect/backoff, allow-listed app launch, media hotkeys, master volume, lock, sleep and hibernate.
+- Windows first-run batch launcher and Task Scheduler install/uninstall scripts.
+- Deployment guide for Telegram, Cloudflare and Windows.
 
-## Not yet ready for deployment
+## Required before deployment
 
-- Validate all endpoint/schema modules with the official CLI.
-- Owner Telegram numeric ID is intentionally unset; backend fails closed.
-- Relay needs Cloudflare account deployment and two secrets configured.
-- Relay URL and relay secret must be set in the Serverless endpoint.
-- Agent needs local config and application paths.
-- Agent acknowledgements must be written back to the Serverless database.
-- UI actions are not all wired to the API yet.
-- Installer, Task Scheduler autostart, Windows process focus/close/restart, exact volume, and safe confirmation flow are pending.
+- Set the owner Telegram numeric ID in `tgcloud/lib/config.js`.
+- Deploy the Cloudflare Worker and create separate `AGENT_SECRET` and `RELAY_SECRET` secrets.
+- Set `RELAY_URL` and `RELAY_SECRET` in the server-side `tgcloud/lib/config.js`.
+- Configure local `agent/config.json` and `agent/apps.json`.
+- Run `npm run build`, inspect `npx tgcloud diff`, then deploy and migrate.
+- Perform a real Telegram-to-Windows smoke test.
 
-No production credentials or deployments have been created from this repository.
+## Not implemented
+
+Restart/shutdown, process focus/close, live CPU/RAM/temperature telemetry, multiple PCs, a guided pairing UI, and robust confirmation flows for destructive actions.
+
+No production credentials or deployment have been created from this repository. The repository changes have not been built or runtime-tested in the user's environment.
