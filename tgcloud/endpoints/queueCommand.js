@@ -1,4 +1,5 @@
 import { db, fetch } from 'sdk';
+import { eq } from 'sdk/db';
 import { assertOwner, RELAY_URL, RELAY_SECRET } from '../lib/config.js';
 import { commands } from '../schema.js';
 
@@ -46,7 +47,7 @@ export default async function(input, ctx) {
     if (!response.ok) {
       return { id, status: 'queued', delivered: false, reason: response.status === 503 ? 'AGENT_OFFLINE' : 'RELAY_REJECTED' };
     }
-    await db.update(commands).set({ status: 'sent' }).where(commands.id.eq(id)).run();
+    await db.update(commands).set({ status: 'sent' }).where(eq(commands.id, id)).run();
     return { id, status: 'sent', delivered: true };
   } catch {
     return { id, status: 'queued', delivered: false, reason: 'RELAY_UNAVAILABLE' };
