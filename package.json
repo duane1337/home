@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && tgcloud push",
+    "tgcloud:login": "tgcloud login",
+    "tgcloud:status": "tgcloud status",
+    "tgcloud:migrate": "tgcloud migrate"
   },
   "dependencies": {
     "@twa-dev/sdk": "^8.0.2",
@@ -19,6 +23,7 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "~5.7.2",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "@tgcloud/cli": "^0.2.0"
   }
 }
