@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getHome, queueCommand } from './lib/serverless'
+import { getHome, queueCommand, getApiUrl, setApiUrl } from './lib/serverless'
 import {
   AppWindow, AudioLines, ChevronRight, CirclePower, Command, Disc3,
   ExternalLink, Home, Lock, Monitor, Moon, MoreHorizontal, Play, Plus,
@@ -37,6 +37,7 @@ function App() {
   const [volume, setVolume] = useState(42)
   const [playing, setPlaying] = useState(false)
   const [pcOnline, setPcOnline] = useState(false)
+  const [serverUrl, setServerUrl] = useState(getApiUrl())
 
   useEffect(() => {
     getHome().then(state => setPcOnline(state.agent.status === 'online')).catch(() => setPcOnline(false))
@@ -129,7 +130,7 @@ function App() {
         {tab === 'settings' && <>
           <PageHeading eyebrow="PREFERENCES" title="Settings" subtitle="Make HomePilot feel like yours." />
           <div className="settings-group"><p className="eyebrow">APPEARANCE</p><div className="setting-row"><div><strong>Accent color</strong><span>Choose a subtle highlight</span></div><div className="swatches">{['#8f263f', '#a46a36', '#526d83', '#68745b', '#77717f'].map(color => <button key={color} className={accent === color ? 'swatch selected' : 'swatch'} style={{ background: color }} onClick={() => setAccent(color)} aria-label={color} />)}</div></div><div className="setting-row"><div><strong>Font</strong><span>Interface typography</span></div><select value={font} onChange={e => setFont(e.target.value)}><option>Inter</option><option>Arial</option><option>Georgia</option></select></div></div>
-          <div className="settings-group"><p className="eyebrow">CONNECTION</p><div className="setting-row"><div><strong>Windows agent</strong><span>{pcOnline ? 'Connected to this device' : 'Not paired with this device'}</span></div><span className="tag-offline">OFFLINE</span></div><div className="setting-row"><div><strong>Telegram account</strong><span>Authenticated through your Telegram session</span></div><ExternalLink size={16} className="subtle-icon" /></div></div>
+          <div className="settings-group"><p className="eyebrow">CONNECTION</p><div className="setting-row"><div><strong>HomePilot server URL</strong><span>HTTPS address from your Cloudflare Tunnel</span></div><input aria-label="HomePilot server URL" value={serverUrl} onChange={e => setServerUrl(e.target.value)} onBlur={() => { setApiUrl(serverUrl); notify("Server URL saved") }} placeholder="https://your-tunnel.trycloudflare.com" /></div><div className="setting-row"><div><strong>Windows server</strong><span>{pcOnline ? 'Connected to this device' : 'Not paired with this device'}</span></div><span className="tag-offline">OFFLINE</span></div><div className="setting-row"><div><strong>Telegram account</strong><span>Authenticated through your Telegram session</span></div><ExternalLink size={16} className="subtle-icon" /></div></div>
           <div className="settings-group"><p className="eyebrow">ABOUT</p><div className="setting-row"><div><strong>HomePilot</strong><span>Early access · v0.1.0</span></div><span className="version-tag">0.1.0</span></div></div>
         </>}
       </main>
