@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react'
 import {
   AppWindow, AudioLines, ChevronRight, CirclePower, Command, Disc3,
-  ExternalLink, Gamepad2, Headphones, Home, Lock, Monitor, Moon,
-  MoreHorizontal, Music2, Play, Plus, Power, RefreshCw, Search,
-  Settings2, SkipBack, SkipForward, SlidersHorizontal, Volume2,
-  VolumeX, X,
+  ExternalLink, Home, Lock, Monitor, Moon, MoreHorizontal, Play, Plus,
+  Power, RefreshCw, Search, Settings2, SkipBack, SkipForward,
+  SlidersHorizontal, Volume2, VolumeX, X,
 } from 'lucide-react'
 
 type Tab = 'home' | 'apps' | 'media' | 'system' | 'settings'
