@@ -1,0 +1,8 @@
+name = "homepilot-relay"
+main = "src/index.js"
+compatibility_date = "2026-11-08"
+[durable_objects]
+bindings = [{ name = "AGENTS", class_name = "AgentRoom" }]
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AgentRoom"]
