@@ -106,3 +106,10 @@ h2{font:600 18px 'Space Grotesk',sans-serif;letter-spacing:-.35px;margin:0}
 .toast button{border:0;background:none;color:#9a9299;display:grid;place-items:center}
 @media(min-width:560px){.app-shell{border-left:1px solid #242328;border-right:1px solid #242328}.bottom-nav{border-left:1px solid #2b292e;border-right:1px solid #2b292e}}
 @media(max-width:370px){.app-shell{padding-left:15px;padding-right:15px}.app-grid{gap:7px}.app-tile{padding:10px;min-height:88px}.nav-item{min-width:47px}}
+
+
+/* Connection and control states */
+.offline-pill.online { color: #8fc4a0; border-color: #294536; background: #17231c; }
+.offline-pill.online span, .status-label.online span { background: #62bd80; box-shadow: 0 0 9px #62bd8070; }
+.status-label.online { color: #8fc4a0; }
+.volume-foot button { display: inline-flex; align-items: center; gap: 6px; border: 0; padding: 0; color: inherit; background: transparent; font: inherit; cursor: pointer; }
