@@ -1,0 +1,6 @@
+{
+  "spotify": { "name": "Spotify", "path": "%APPDATA%\\Spotify\\Spotify.exe" },
+  "steam": { "name": "Steam", "path": "C:\\Program Files (x86)\\Steam\\steam.exe" },
+  "discord": { "name": "Discord", "path": "%LOCALAPPDATA%\\Discord\\Update.exe" },
+  "chrome": { "name": "Chrome", "path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" }
+}
