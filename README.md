@@ -1,28 +1,21 @@
 # HomePilot
 
-Telegram Mini App for controlling one Windows PC remotely.
+Telegram Mini App for controlling one Windows PC through a lightweight local server.
 
-The project uses Telegram Serverless for the Mini App/backend, a Cloudflare Worker + Durable Object as a WebSocket relay, and a Python agent running in the logged-in Windows session. The PC agent connects outbound, so no router port forwarding is needed.
+## Architecture
+- React/Vite Telegram Mini App hosted by Telegram Serverless static hosting.
+- FastAPI server runs on the Windows PC and listens only on 127.0.0.1:8765.
+- Cloudflare Quick Tunnel provides an HTTPS route to the local server. No router port forwarding.
+- Every API request includes Telegram Mini App initData. The server verifies its HMAC signature using the BotFather Bot API token and checks the configured owner Telegram ID.
 
-## Implemented
-
-- Dark responsive Telegram Mini App: Home, Apps, Media, System and Settings.
-- Telegram-authenticated owner-only endpoints and SQLite command queue.
-- Cloudflare relay with authenticated agent WebSocket and command acknowledgements.
-- Windows agent: allow-listed app launch, media hotkeys, master volume, lock, sleep and hibernate.
-- Windows startup task scripts.
-
-## Quick setup
-
-Follow [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) in order. You need Node.js 18+, a Telegram bot with Serverless enabled, a Cloudflare account, Python 3.11+ on the Windows PC, and two separate random secrets.
+## Windows setup
+See [agent/README.md](agent/README.md). In short: configure agent/config.json with the Bot API token and owner ID, start the local server, start cloudflared, then paste the trycloudflare URL into HomePilot Settings.
 
 ## Security
+- Never bind the API to 0.0.0.0 or expose port 8765 directly.
+- Keep agent/config.json and agent/apps.json private.
+- The API only supports allow-listed app launches, media keys/volume, lock, sleep and hibernate. It has no arbitrary shell endpoint.
+- Quick Tunnel URLs change after restart; update the URL in Mini App Settings.
 
-- The backend checks the Telegram user ID against the configured owner ID.
-- The agent accepts only explicit actions; arbitrary shell execution is not supported.
-- Keep the GitHub repository private if you place the relay shared secret in `tgcloud/lib/config.js`.
-- Never commit `agent/config.json`, `agent/apps.json`, Cloudflare credentials or Telegram credentials.
-
-## Known limits
-
-Restart/shutdown, process focus/close, telemetry, multi-PC support and a pairing UI are not implemented. The app has not been built or deployed in the user's environment yet. Run the documented build and smoke tests before relying on it.
+## Performance
+The server is event-driven and idle between requests. It does not poll or keep a WebSocket open. Actual RAM/CPU usage depends on Python and Windows audio libraries and should be measured on the target PC.
