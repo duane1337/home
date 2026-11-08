@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import websockets
+from pycaw.pycaw import AudioUtilities
 
 ROOT = Path(__file__).resolve().parent
 CONFIG_PATH = ROOT / "config.json"
@@ -71,6 +72,14 @@ def execute(command: dict[str, Any], apps: dict[str, Any]) -> dict[str, Any]:
     if action in media_keys:
         press_key(media_keys[action])
         return {"message": "Media key sent"}
+
+    if action == "media.volume.set":
+        value = payload.get("value")
+        if not isinstance(value, int) or not 0 <= value <= 100:
+            raise ValueError("Volume must be an integer from 0 to 100")
+        device = AudioUtilities.GetSpeakers()
+        device.EndpointVolume.SetMasterVolumeLevelScalar(value / 100.0, None)
+        return {"message": f"Volume set to {value}%"}
 
     if action == "system.lock":
         if not ctypes.windll.user32.LockWorkStation():
