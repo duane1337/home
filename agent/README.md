@@ -1,19 +1,17 @@
-# HomePilot Windows Agent
+# HomePilot Local Server
 
-The agent runs in the logged-in Windows session and maintains one outbound WebSocket. It does not poll and requires no router port forwarding.
+HomePilot now uses a small FastAPI server on the Windows PC. It has no polling loop and listens only on 127.0.0.1:8765. Use Cloudflare Tunnel for HTTPS access; never expose port 8765 directly to the internet.
 
-## First run
+## Setup
+1. Install Python 3.11+ and cloudflared (winget install --id Cloudflare.cloudflared).
+2. Copy config.example.json to config.json. Set the BotFather Bot API token and your numeric Telegram user ID.
+3. Copy apps.example.json to apps.json and verify executable paths.
+4. Run start-agent.bat. This starts the API minimized in the background.
+5. In another terminal run start-tunnel.bat. Copy the https://*.trycloudflare.com URL it prints.
+6. Open HomePilot in Telegram, go to Settings, paste that URL into HomePilot server URL, and blur/save the field.
 
-1. Install Python 3.11 or newer.
-2. Copy `config.example.json` to `config.json` and set the deployed relay URL plus the same agent secret configured in Cloudflare.
-3. Copy `apps.example.json` to `apps.json`. Check executable paths on this PC.
-4. Run `start-agent.bat`. It creates a local virtual environment and installs dependencies on first launch.
-5. Keep the terminal open while testing.
+## Security
+The server validates Telegram Mini App initData with the Bot API token and enforces the configured owner ID. Keep config.json private. The API binds to localhost only; Cloudflare Tunnel provides the public HTTPS route. Quick Tunnel URLs change when restarted, so update the URL in Settings after each restart.
 
-After a successful manual start, run PowerShell as your normal Windows user and execute `install-autostart.ps1` to start the agent at login. Remove it with `uninstall-autostart.ps1`.
-
-## Supported commands
-
-Allow-listed app launch, media play/pause/next/previous/mute, Windows lock, sleep and hibernate. No arbitrary shell execution. Restart, shutdown, process termination, exact volume control and live system metrics are not implemented.
-
-The agent is an interactive user-session process, not a Windows service. Local `config.json`, `apps.json`, virtual environment and logs must never be committed.
+## Commands
+Allow-listed app launch, media hotkeys, master volume, lock, sleep and hibernate. No arbitrary shell command endpoint exists.
