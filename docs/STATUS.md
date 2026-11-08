@@ -5,7 +5,7 @@ Last updated: 2026-11-08
 ## Implemented in repository
 
 - React/Vite Telegram Mini App with Home, Apps, Media, System and Settings.
-- Telegram Serverless RPC bridge using the documented promise-based endpoint call.
+- Telegram Serverless RPC bridge using Telegram's documented callback-based endpoint call.
 - Owner-authenticated endpoints and SQLite command queue.
 - Cloudflare Worker + Durable Object WebSocket relay with agent authentication and acknowledgement lookup.
 - Python Windows agent with reconnect/backoff, allow-listed app launch, media hotkeys, master volume, lock, sleep and hibernate.
