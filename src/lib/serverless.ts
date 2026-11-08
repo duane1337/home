@@ -1,22 +1,23 @@
 type TelegramServerless = {
   call<T>(name: string, input?: Record<string, unknown>): Promise<T>;
 };
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: {
-        Serverless?: TelegramServerless;
-      };
+
+type TelegramWindow = Window & {
+  Telegram?: {
+    WebApp?: {
+      Serverless?: TelegramServerless;
     };
-  }
-}
+  };
+};
+
 export function callEndpoint<T>(name: string, input: Record<string, unknown> = {}): Promise<T> {
-  const serverless = window.Telegram?.WebApp?.Serverless;
+  const serverless = (window as TelegramWindow).Telegram?.WebApp?.Serverless;
   if (!serverless) {
     return Promise.reject(new Error('Open HomePilot inside Telegram to use cloud endpoints.'));
   }
   return serverless.call<T>(name, input);
 }
+
 export type HomeState = {
   product: string;
   version: string;
