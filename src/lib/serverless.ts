@@ -1,5 +1,9 @@
 type TelegramServerless = {
-  call<T>(name: string, input?: Record<string, unknown>): Promise<T>;
+  call<T>(
+    name: string,
+    input: Record<string, unknown>,
+    callback: (error: Error | null, result?: T) => void,
+  ): void;
 };
 
 type TelegramWindow = Window & {
@@ -15,7 +19,12 @@ export function callEndpoint<T>(name: string, input: Record<string, unknown> = {
   if (!serverless) {
     return Promise.reject(new Error('Open HomePilot inside Telegram to use cloud endpoints.'));
   }
-  return serverless.call<T>(name, input);
+  return new Promise((resolve, reject) => {
+    serverless.call<T>(name, input, (error, result) => {
+      if (error) reject(new Error(error.message || 'Telegram Serverless request failed'));
+      else resolve(result as T);
+    });
+  });
 }
 
 export type HomeState = {
