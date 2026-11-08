@@ -12,6 +12,7 @@ dist/
 build/
 coverage/
 .vite/
+.tgcloud/
 
 # Python
 .venv/
@@ -20,6 +21,12 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .mypy_cache/
+agent/config.json
+agent/apps.json
+agent/homepilot-agent.log
+
+# Cloudflare
+relay/.wrangler/
 
 # Editors and OS
 .vscode/
