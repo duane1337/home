@@ -1,76 +1,36 @@
-# Deployment
+# HomePilot Local Deployment
 
-HomePilot has two deploy targets: the Telegram Mini App/backend and a small Cloudflare relay. The Windows agent connects outbound to the relay over WebSocket. No router port forwarding is required.
-
-## 1. Prepare Telegram
-
-1. Create a bot with @BotFather.
-2. Enable Telegram Serverless for the bot and obtain its **Serverless CLI access token**. Do not use the ordinary Bot API token as the CLI token.
-3. Open the project folder in PowerShell and run:
-
+## 1. Update the Mini App
+From the project root:
 ```powershell
 npm install
-npx tgcloud login
-```
-
-4. Get your numeric Telegram user ID from a trusted ID bot or Telegram client.
-5. In `tgcloud/lib/config.js`, set `OWNER_TELEGRAM_ID` to that numeric ID. This is an owner-only personal control panel, not a multi-user service.
-
-## 2. Deploy the relay
-
-Requires a Cloudflare account and Node.js 18+.
-
-```powershell
-cd relay
-npx wrangler login
-npx wrangler secret put AGENT_SECRET
-npx wrangler secret put RELAY_SECRET
-npx wrangler deploy
-```
-
-When prompted, enter two different random secrets, each at least 32 characters. Save them temporarily in a password manager. Cloudflare prints the deployed Worker URL, for example `https://homepilot-relay.<your-subdomain>.workers.dev`.
-
-## 3. Connect Telegram backend to relay
-
-Edit `tgcloud/lib/config.js`:
-
-- `RELAY_URL`: the Worker base URL, without a trailing slash.
-- `RELAY_SECRET`: the exact value entered for the Cloudflare `RELAY_SECRET`.
-- `OWNER_TELEGRAM_ID`: your numeric Telegram user ID.
-
-These are server-side values, never frontend values. Keep the GitHub repository private if you store the relay secret in this file. Do not paste secrets into chats or screenshots.
-
-## 4. Deploy Mini App and backend
-
-From the project root:
-
-```powershell
 npm run build
-npx tgcloud status
-npx tgcloud diff
 npx tgcloud push
-npx tgcloud migrate
 ```
+The Telegram Serverless backend and Cloudflare Worker relay are no longer used. Telegram hosting is only used for the static Mini App files.
 
-Review the migration plan before confirming it. Use the Mini App URL printed by the CLI in @BotFather to configure the bot's Mini App.
+## 2. Configure the Windows server
+Install Python 3.11+ and cloudflared:
+```powershell
+winget install --id Cloudflare.cloudflared
+```
+Copy `agent/config.example.json` to `agent/config.json`. Set:
+- `bot_token`: the ordinary Bot API token from @BotFather (not the Serverless CLI token).
+- `owner_id`: your numeric Telegram user ID.
 
-## 5. Install Windows agent
+Copy `agent/apps.example.json` to `agent/apps.json` and verify the executable paths.
 
-On the Windows PC:
+Run `agent/start-agent.bat`. It installs the small Python dependencies on first run and starts the server minimized on 127.0.0.1:8765.
 
-1. Copy `agent/config.example.json` to `agent/config.json`.
-2. Set `relay_url` to `wss://<your-worker-host>/agent`.
-3. Set `agent_secret` to the exact value entered for Cloudflare `AGENT_SECRET`.
-4. Copy `agent/apps.example.json` to `agent/apps.json` and correct any executable paths.
-5. Run `agent/start-agent.bat`. Leave it running while testing.
-6. Once confirmed, run `agent/install-autostart.ps1` in PowerShell to start at Windows login.
+## 3. Start the HTTPS tunnel
+Run `agent/start-tunnel.bat` in a second terminal. Copy the HTTPS URL ending in `.trycloudflare.com`.
 
-Check relay health by opening `https://<your-worker-host>/health`. It should return JSON with `connected: true` while the agent is running.
+In Telegram, open HomePilot -> Settings -> HomePilot server URL. Paste the URL and leave the field (blur) to save and test the connection.
 
-## Current implementation limits
+Quick Tunnel URLs are temporary and change when the tunnel is restarted. Update the URL in Settings after each restart. For a permanent URL, configure a named Cloudflare Tunnel with a domain you control.
 
-Implemented: owner-authenticated Telegram endpoints, command queue, Cloudflare WebSocket relay, Windows outbound agent, allow-listed app launch, media hotkeys, lock, sleep and hibernate.
+## Security model
+The local server validates Telegram initData cryptographically on every request, checks its age and restricts access to the owner ID. The server binds only to loopback. Do not share the Bot API token or config.json. Do not expose port 8765 directly.
 
-Not implemented: restart/shutdown, process close/focus, exact volume adjustment, live CPU/RAM/temperature telemetry, multiple PCs, and pairing UI. The app's volume slider and some display elements remain visual placeholders.
-
-This repository has not been built or deployed in the user's environment. Run the build and CLI checks above before applying migrations or exposing the Mini App. Telegram Serverless SDK behavior and Cloudflare Durable Object runtime compatibility still need a real deployment smoke test.
+## Supported commands
+Allow-listed app launch, media play/pause/next/previous/mute, master volume, Windows lock, sleep and hibernate. Restart/shutdown and arbitrary shell execution are intentionally not exposed.
