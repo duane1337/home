@@ -1,0 +1,6 @@
+{
+  "relay_url": "wss://homepilot-relay.YOUR_SUBDOMAIN.workers.dev/agent",
+  "agent_secret": "GENERATE_A_LONG_RANDOM_SECRET",
+  "reconnect_min_seconds": 2,
+  "reconnect_max_seconds": 30
+}
