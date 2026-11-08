@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { getHome, queueCommand } from './lib/serverless'
 import {
   AppWindow, AudioLines, ChevronRight, CirclePower, Command, Disc3,
   ExternalLink, Home, Lock, Monitor, Moon, MoreHorizontal, Play, Plus,
@@ -35,6 +36,11 @@ function App() {
   const [font, setFont] = useState('Inter')
   const [volume, setVolume] = useState(42)
   const [playing, setPlaying] = useState(false)
+  const [pcOnline, setPcOnline] = useState(false)
+
+  useEffect(() => {
+    getHome().then(state => setPcOnline(state.agent.status === 'online')).catch(() => setPcOnline(false))
+  }, [])
 
   const notify = (message: string) => {
     setToast(message)
@@ -46,7 +52,22 @@ function App() {
     [apps, query],
   )
 
-  const runAction = (name: string, action: string) => notify(`${action}: ${name} · agent not connected`)
+  const sendCommand = async (action: string, payload: Record<string, unknown> = {}) => {
+    try {
+      const result = await queueCommand(action, payload)
+      if (result.delivered) notify('Command sent to your PC')
+      else notify(result.reason === 'AGENT_OFFLINE' ? 'Windows agent is offline' : 'Command queued. Check connection settings.')
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Command failed')
+    }
+  }
+  const runAction = (name: string, action: string) => {
+    if (action !== 'Launch') return notify('This action is not available yet')
+    const appIds: Record<string, string> = { Spotify: 'spotify', Steam: 'steam', Discord: 'discord', Chrome: 'chrome' }
+    const appId = appIds[name]
+    if (!appId) return notify(name + ' is not configured in the Windows agent')
+    void sendCommand('app.launch', { app_id: appId })
+  }
   const toggleFavorite = (name: string) =>
     setApps((current) => current.map((app) => app.name === name ? { ...app, favorite: !app.favorite } : app))
 
@@ -62,13 +83,13 @@ function App() {
         {tab === 'home' && <>
           <section className="welcome-row">
             <div><p className="eyebrow">CONTROL CENTER</p><h1>Your space.</h1><p className="muted">Everything within reach.</p></div>
-            <div className="offline-pill"><span /> Offline</div>
+            <div className={pcOnline ? "offline-pill online" : "offline-pill"}><span /> {pcOnline ? "Online" : "Offline"}</div>
           </section>
           <section className="pc-card">
             <div className="pc-card-top"><div className="pc-icon"><Monitor size={21} /></div><span className="card-kicker">YOUR COMPUTER</span><MoreHorizontal size={19} className="subtle-icon" /></div>
-            <div className="pc-title-row"><div><h2>DESKTOP</h2><p>Windows workstation</p></div><div className="status-label"><span /> OFFLINE</div></div>
+            <div className="pc-title-row"><div><h2>DESKTOP</h2><p>Windows workstation</p></div><div className={pcOnline ? "status-label online" : "status-label"}><span /> {pcOnline ? "ONLINE" : "OFFLINE"}</div></div>
             <div className="pc-divider" />
-            <div className="pc-footer"><span>Agent disconnected</span><button className="text-button" onClick={() => notify('PC is offline')}>Details <ChevronRight size={15} /></button></div>
+            <div className="pc-footer"><span>{pcOnline ? "Agent connected" : "Agent disconnected"}</span><button className="text-button" onClick={() => notify('PC is offline')}>Details <ChevronRight size={15} /></button></div>
           </section>
           <section className="section-block">
             <div className="section-heading"><div><p className="eyebrow">QUICK ACCESS</p><h2>Favorites</h2></div><button className="link-button" onClick={() => setTab('apps')}>All apps <ChevronRight size={15} /></button></div>
@@ -76,7 +97,7 @@ function App() {
           </section>
           <section className="section-block media-preview">
             <div className="section-heading"><div><p className="eyebrow">NOW PLAYING</p><h2>Media</h2></div><button className="link-button" onClick={() => setTab('media')}>Open player <ChevronRight size={15} /></button></div>
-            <div className="media-inline"><div className="album-placeholder"><Disc3 size={24} /></div><div className="track-copy"><strong>No active session</strong><span>Start playing something on your PC</span></div><button className="round-control" onClick={() => notify('Media agent not connected')}><Play size={16} fill="currentColor" /></button></div>
+            <div className="media-inline"><div className="album-placeholder"><Disc3 size={24} /></div><div className="track-copy"><strong>No active session</strong><span>Start playing something on your PC</span></div><button className="round-control" onClick={() => void sendCommand('media.playPause')}><Play size={16} fill="currentColor" /></button></div>
           </section>
         </>}
 
@@ -89,7 +110,7 @@ function App() {
 
         {tab === 'media' && <>
           <PageHeading eyebrow="LISTENING ROOM" title="Media" subtitle="Control playback across Windows." />
-          <div className="player-card"><div className="large-album"><Disc3 size={54} strokeWidth={1.1} /></div><p className="eyebrow center">WINDOWS MEDIA SESSION</p><h2 className="empty-track">Nothing playing</h2><p className="muted center">Start playback on your computer to see track details here.</p><div className="progress-track"><span /></div><div className="player-controls"><button onClick={() => notify('Media agent not connected')}><SkipBack size={22} /></button><button className="play-main" onClick={() => setPlaying(!playing)}>{playing ? <AudioLines size={23} /> : <Play size={22} fill="currentColor" />}</button><button onClick={() => notify('Media agent not connected')}><SkipForward size={22} /></button></div></div>
+          <div className="player-card"><div className="large-album"><Disc3 size={54} strokeWidth={1.1} /></div><p className="eyebrow center">WINDOWS MEDIA SESSION</p><h2 className="empty-track">Nothing playing</h2><p className="muted center">Start playback on your computer to see track details here.</p><div className="progress-track"><span /></div><div className="player-controls"><button onClick={() => void sendCommand('media.previous')}><SkipBack size={22} /></button><button className="play-main" onClick={() => { setPlaying(!playing); void sendCommand('media.playPause') }}>{playing ? <AudioLines size={23} /> : <Play size={22} fill="currentColor" />}</button><button onClick={() => void sendCommand('media.next')}><SkipForward size={22} /></button></div></div>
           <div className="volume-card"><div className="volume-head"><div><Volume2 size={18} /><strong>System volume</strong></div><span>{volume}%</span></div><input type="range" min="0" max="100" value={volume} onChange={e => setVolume(Number(e.target.value))} /><div className="volume-foot"><VolumeX size={16} /><span>Muted</span><Volume2 size={16} /></div></div>
         </>}
 
@@ -97,18 +118,18 @@ function App() {
           <PageHeading eyebrow="SYSTEM" title="Power controls" subtitle="Manage your Windows session." />
           <div className="system-notice"><div className="notice-icon"><Power size={19} /></div><div><strong>Computer is offline</strong><span>Power actions become available when the agent connects.</span></div></div>
           <div className="power-list">
-            <PowerRow icon={Lock} title="Lock computer" description="Lock your Windows session" onClick={() => notify('Agent not connected')} />
-            <PowerRow icon={Moon} title="Sleep" description="Put the computer into sleep mode" onClick={() => notify('Agent not connected')} />
-            <PowerRow icon={CirclePower} title="Hibernate" description="Save session and power off" onClick={() => notify('Agent not connected')} />
-            <PowerRow icon={RefreshCw} title="Restart" description="Restart Windows" danger onClick={() => notify('Agent not connected')} />
-            <PowerRow icon={Power} title="Shut down" description="Turn off the computer" danger onClick={() => notify('Agent not connected')} />
+            <PowerRow icon={Lock} title="Lock computer" description="Lock your Windows session" onClick={() => void sendCommand('system.lock')} />
+            <PowerRow icon={Moon} title="Sleep" description="Put the computer into sleep mode" onClick={() => void sendCommand('system.sleep')} />
+            <PowerRow icon={CirclePower} title="Hibernate" description="Save session and power off" onClick={() => void sendCommand('system.hibernate')} />
+            <PowerRow icon={RefreshCw} title="Restart" description="Restart Windows" danger onClick={() => notify('Restart is disabled in this build')} />
+            <PowerRow icon={Power} title="Shut down" description="Turn off the computer" danger onClick={() => notify('Shutdown is disabled in this build')} />
           </div>
         </>}
 
         {tab === 'settings' && <>
           <PageHeading eyebrow="PREFERENCES" title="Settings" subtitle="Make HomePilot feel like yours." />
           <div className="settings-group"><p className="eyebrow">APPEARANCE</p><div className="setting-row"><div><strong>Accent color</strong><span>Choose a subtle highlight</span></div><div className="swatches">{['#8f263f', '#a46a36', '#526d83', '#68745b', '#77717f'].map(color => <button key={color} className={accent === color ? 'swatch selected' : 'swatch'} style={{ background: color }} onClick={() => setAccent(color)} aria-label={color} />)}</div></div><div className="setting-row"><div><strong>Font</strong><span>Interface typography</span></div><select value={font} onChange={e => setFont(e.target.value)}><option>Inter</option><option>Arial</option><option>Georgia</option></select></div></div>
-          <div className="settings-group"><p className="eyebrow">CONNECTION</p><div className="setting-row"><div><strong>Windows agent</strong><span>Not paired with this device</span></div><span className="tag-offline">OFFLINE</span></div><div className="setting-row"><div><strong>Telegram account</strong><span>Authentication will be enabled in backend setup</span></div><ExternalLink size={16} className="subtle-icon" /></div></div>
+          <div className="settings-group"><p className="eyebrow">CONNECTION</p><div className="setting-row"><div><strong>Windows agent</strong><span>{pcOnline ? 'Connected to this device' : 'Not paired with this device'}</span></div><span className="tag-offline">OFFLINE</span></div><div className="setting-row"><div><strong>Telegram account</strong><span>Authentication will be enabled in backend setup</span></div><ExternalLink size={16} className="subtle-icon" /></div></div>
           <div className="settings-group"><p className="eyebrow">ABOUT</p><div className="setting-row"><div><strong>HomePilot</strong><span>Early access · v0.1.0</span></div><span className="version-tag">0.1.0</span></div></div>
         </>}
       </main>
